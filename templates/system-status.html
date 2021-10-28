@@ -1,0 +1,195 @@
+<style>
+    #system-checks .heading td {
+        font-weight: bold;
+        font-size: 120%;
+        padding-top: 1.5em;
+    }
+
+    #system-checks .heading.first td {
+        border-top: none;
+        padding-top: 0;
+    }
+
+    #system-checks div.extra {
+        display: none;
+        margin-top: 1em;
+        max-width: 50em;
+        word-wrap: break-word;
+    }
+
+    #system-checks a.showhide {
+        display: none;
+        font-size: 85%;
+    }
+
+    #system-checks .pre {
+        margin: 1em;
+        font-family: monospace;
+        white-space: pre-wrap;
+    }
+</style>
+
+<h2></h2>
+<!--    <h2>System Status Checks</h2>-->
+<div id="system-reboot-required" style="display: none; margin-bottom: 1em;">
+    <button type="button" class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent" onclick="confirm_reboot(); return false;">Reboot Box</button>
+    <div>No reboot is necessary.</div>
+</div>
+
+<div id="system-privacy-setting" style="display: none">
+    <div>
+        <p>
+            New-Version Check&emsp;
+            <label class="mdui-switch">
+                <input onclick="return enable_privacy(!current_privacy_setting)" class="privacy-checkbox"
+                       type="checkbox"/>
+                <i class="mdui-switch-icon"></i>
+            </label>
+        </p>
+    </div>
+    <p style="line-height: 125%"><small>(When enabled, status checks phone-home to check for a new release of
+        Mail-in-a-Box.)</small></p>
+</div>
+<div class="mdui-panel" id="main" mdui-panel>
+</div>
+
+<script>
+    function show_system_status() {
+        //$('#system-checks tbody').html("<tr><td colspan='2' class='text-muted'>Loading...</td></tr>")
+        $('.mdui-typo-headline').text("System Status")
+        $("#drawer a.mdui-list-item")[0].className += " mdui-list-item-active"
+        api(
+            "/system/privacy",
+            "GET",
+            {},
+            function (r) {
+                current_privacy_setting = r;
+                $('#system-privacy-setting').show();
+                $('#system-privacy-setting .privacy-checkbox')[0].checked = !r;
+                $('#system-privacy-setting p')[1].hidden = !r;
+            });
+
+        api(
+            "/system/reboot",
+            "GET",
+            {},
+            function (r) {
+                $('#system-reboot-required').show(); // show when r becomes available
+                $('#system-reboot-required').find('button').toggle(r);
+                $('#system-reboot-required').find('div').toggle(!r);
+            });
+
+        api(
+            "/system/status",
+            "POST",
+            {},
+            function (r) {
+                $('#main').html("");
+                var p = 0;
+                var error = 0;
+                var warning = 0;
+                for (var i = 0; i < r.length; i++) {
+                    if (r[i].type == "heading") {
+                        var n = $("<div class=\"mdui-panel-item\">" +
+                            "   <div class=\"mdui-panel-item-header\">\n" +
+                            "       <div class=\"mdui-panel-item-title\"></div>\n" +
+                            "       <div class=\"mdui-panel-item-summary\">No error found</div>\n" +
+                            "       <i class=\"mdui-panel-item-arrow mdui-icon material-icons\">keyboard_arrow_down</i>\n" +
+                            "    </div>\n" +
+                            "    <div class=\"mdui-panel-item-body main-body\">\n" +
+                            "    </div>" +
+                            "</div>");
+                        n.find("div.mdui-panel-item-title").text(r[i].text);
+                        $('#main').append(n)
+                        if (i != 0) p++;
+                    } else {
+                        var n = $("<p/>").text(r[i].text);
+
+                        if (r[i].type == "error") {
+                            error++
+                            n.addClass("mdui-text-color-red-accent")
+                        } else if (r[i].type == "warning") {
+                            warning++
+                            n.addClass("mdui-text-color-orange-accent")
+                        } else {
+                            n.addClass("mdui-text-color-green-accent")
+                        }
+
+                        $('#main .main-body')[p].append(n[0])
+                        if (r[i].extra.length > 0) {
+                            var ns = $("<div class=\"mdui-panel\" mdui-panel>" +
+                                "   <div class=\"mdui-panel-item\">" +
+                                "       <div class=\"mdui-panel-item-header\">\n" +
+                                "           <div class=\"mdui-panel-item-title\">Detail(s)</div>\n" +
+                                "           <i class=\"mdui-panel-item-arrow mdui-icon material-icons\">keyboard_arrow_down</i>\n" +
+                                "       </div>\n" +
+                                "       <div class=\"mdui-panel-item-body mdui-typo\">\n" +
+                                "       </div>" +
+                                "   </div>" +
+                                "</div>");
+                            for (var j = 0; j < r[i].extra.length; j++) {
+
+                                var m = $("<p/>")
+                                if (r[i].extra[j].monospace)
+                                    m.append($("<code/>").text(r[i].extra[j].text))
+                                else
+                                    m.text(r[i].extra[j].text)
+                                ns.find('div.mdui-panel-item-body').append(m);
+                            }
+                            $('#main .main-body')[p].append(ns[0])
+                        }
+
+                        //Summary
+                        if (typeof (r[i+1]) == 'undefined'|| r[i + 1].type == "heading") {
+                            var summary = "No error found"
+                            if (error + warning) {
+                                summary = error + " Error(s), " + warning + " Warning(s)"
+                            }
+                            $('#main .mdui-panel-item-summary')[p].textContent = summary
+                            if (error)
+                                $('#main .mdui-panel-item-summary')[p].className += " mdui-text-color-red-accent"
+                            else if (warning)
+                                $('#main .mdui-panel-item-summary')[p].className += " mdui-text-color-orange-accent"
+                            error = 0;
+                            warning = 0;
+                        }
+                    }
+                    mdui.mutation();
+                }
+            })
+
+    }
+
+    var current_privacy_setting = null;
+
+    function enable_privacy(status) {
+        api(
+            "/system/privacy",
+            "POST",
+            {
+                value: (status ? "private" : "off")
+            },
+            function (res) {
+                show_system_status();
+            });
+        return false; // disable link
+    }
+
+    function confirm_reboot() {
+        show_modal_confirm(
+            "Reboot",
+            $("<p>This will reboot your Mail-in-a-Box <code>{{hostname}}</code>.</p> <p>Until the machine is fully restarted, your users will not be able to send and receive email, and you will not be able to connect to this control panel or with SSH. The reboot cannot be cancelled.</p>"),
+            "Reboot Now",
+            function () {
+                api(
+                    "/system/reboot",
+                    "POST",
+                    {},
+                    function (r) {
+                        var msg = "<p>Please reload this page after a minute or so.</p>";
+                        if (r) msg = "<p>The reboot command said:</p> <pre>" + $("<pre/>").text(r).html() + "</pre>"; // successful reboots don't produce any output; the output must be HTML-escaped
+                        show_modal_error("Reboot", msg);
+                    });
+            });
+    }
+</script>

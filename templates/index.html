@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{{hostname}} - Mail-in-a-Box Control Panel</title>
+
+    <meta name="robots" content="noindex, nofollow">
+    <!--Mobile Web App-->
+    <link rel="apple-touch-icon" href="/admin/assets/neonmail.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/admin/assets/neonmail.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/admin/assets/neonmail.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/admin/assets/neonmail.png">
+    <link rel="apple-touch-startup-image" href="/admin/assets/neonmail.png">
+    <meta name="apple-mobile-web-app-title" content="MiaB-Admin">
+
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+    <meta content="telephone=no" name="format-detection"/>
+
+    <!--        <link rel="stylesheet" href="/admin/assets/bootstrap/css/bootstrap.min.css">-->
+    <link rel="stylesheet" href="/admin/assets/mdui/css/mdui.min.css">
+    <style>
+        body {
+            overflow-y: scroll;
+            padding-bottom: 20px;
+        }
+
+        p {
+            margin-bottom: 1.25em;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: sans-serif;
+            font-weight: bold;
+        }
+
+        h2 {
+            margin: 1em 0;
+        }
+
+        h3 {
+            font-size: 130%;
+            border-bottom: 1px solid black;
+            padding-bottom: 3px;
+            margin-bottom: 13px;
+            margin-top: 30px;
+        }
+
+        .panel-heading h3 {
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        h4 {
+            font-size: 110%;
+            margin-bottom: 13px;
+            margin-top: 18px;
+        }
+
+        h4:first-child {
+            margin-top: 6px;
+        }
+
+        .admin_panel {
+            display: none;
+        }
+
+        table.table {
+            margin: 1.5em 0;
+        }
+
+        ol li {
+            margin-bottom: 1em;
+        }
+    </style>
+    <!--        <link rel="stylesheet" href="/admin/assets/bootstrap/css/bootstrap-theme.min.css">-->
+</head>
+<body class="mdui-appbar-with-toolbar mdui-theme-primary-indigo mdui-theme-accent-pink mdui-theme-layout-dark mdui-loaded">
+<!--[if lt IE 8]><p>Internet Explorer version 8 or any modern web browser is required to use this website, sorry.</p>
+<![endif]-->
+<!--[if gt IE 7]><!-->
+
+<!--NavBar-->
+<header class="mdui-appbar mdui-appbar-fixed">
+    <div class="mdui-toolbar mdui-color-theme">
+        <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white"
+              mdui-drawer="{target: '#drawer', swipe: true}"><i class="mdui-icon material-icons">&#xe5d2;</i></span>
+        <p class="mdui-typo-headline">{{hostname}}</p>
+        <div class="mdui-toolbar-spacer"></div>
+        <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" id="dark_toggle_btn"
+              mdui-tooltip="{content: 'Log out'}" onclick="do_logout(); return false;"><i
+                class="mdui-icon material-icons">&#xe879;</i></span>
+    </div>
+</header>
+<!--Drawer-->
+<div class="mdui-drawer mdui-drawer-close mdui-shadow-7" id="drawer">
+    <div class="mdui-card">
+        <div class="mdui-card-media">
+            <img src="/admin/assets/neonmail.png">
+            <div class="mdui-card-media-covered mdui-card-media-covered-gradient">
+                <div class="mdui-card-primary">
+                    <div class="mdui-card-primary-title">{{hostname}}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mdui-list" mdui-collapse="{accordion: true}">
+        <div class="mdui-collapse-item">
+            <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
+                <i class="mdui-list-item-icon mdui-icon material-icons">&#xe8b8;</i>
+                <div class="mdui-list-item-content">System</div>
+                <i class="mdui-collapse-item-arrow mdui-icon material-icons">&#xe313;</i>
+            </div>
+            <div class="mdui-collapse-item-body mdui-list">
+                <a href="#system_status" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">Status
+                    Checks</a>
+                <a href="#tls" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">TLS (SSL)
+                    Certificates</a>
+                <a href="#system_backup" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">Backup
+                    Status</a>
+                <div class="mdui-subheader-inset">Advanced Pages</div>
+                <a href="#custom_dns" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">Custom
+                    DNS</a>
+                <a href="#external_dns" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">External
+                    DNS</a>
+                <a href="/admin/munin" class="mdui-list-item mdui-ripple" target="_blank">Munin Monitoring</a>
+            </div>
+        </div>
+
+        <div class="mdui-collapse-item">
+            <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
+                <i class="mdui-list-item-icon mdui-icon material-icons">&#xe853;</i>
+                <div class="mdui-list-item-content">Mail & Users</div>
+                <i class="mdui-collapse-item-arrow mdui-icon material-icons">&#xe313;</i>
+            </div>
+            <div class="mdui-collapse-item-body mdui-list">
+                <a href="#mail-guide" class="mdui-list-item mdui-ripple"
+                   onclick="return show_panel(this);">Instructions</a>
+                <a href="#users" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">Users</a>
+                <a href="#aliases" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">Aliases</a>
+                <div class="mdui-subheader-inset">Your Account</div>
+                <a href="#mfa" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">Two-Factor
+                    Auth</a>
+            </div>
+        </div>
+        <a href="#sync_guide" onclick="return show_panel(this);" class="mdui-list-item mdui-ripple">
+            <i class="mdui-list-item-icon mdui-icon material-icons">&#xe627;</i>
+            <div class="mdui-list-item-content mdui-m-r-4">Contacts/Calendar</div>
+        </a>
+        <a href="#web" onclick="return show_panel(this);" class="mdui-list-item mdui-ripple">
+            <i class="mdui-list-item-icon mdui-icon material-icons">&#xe051;</i>
+            <div class="mdui-list-item-content mdui-m-r-4">Web</div>
+        </a>
+        <div class="mdui-typo mdui-typo-caption-opacity" style="position: absolute; bottom: 0;">
+            Powered by <a href="https://mailinabox.email/" target="_blank">MiaB</a>
+            <br>
+            Theme <a href="//github.com/IPlayForHer/MiaB-theme-mdui"
+                     target="_blank">IPlayForHer/MiaB-theme-mdui</a>
+            <br>
+        </div>
+    </div>
+</div>
+
+<!-- /container -->
+<div class="container">
+    <div id="panel_system_status" class="admin_panel mdui-container">
+        {% include "system-status.html" %}
+    </div>
+
+    <div id="panel_system_backup" class="admin_panel mdui-container">
+        {% include "system-backup.html" %}
+    </div>
+
+    <div id="panel_external_dns" class="admin_panel mdui-container">
+        {% include "external-dns.html" %}
+    </div>
+
+    <div id="panel_custom_dns" class="admin_panel mdui-container">
+        {% include "custom-dns.html" %}
+    </div>
+
+    <div id="panel_mfa" class="admin_panel mdui-container">
+        {% include "mfa.html" %}
+    </div>
+
+    <div id="panel_login" class="admin_panel mdui-container">
+        {% include "login.html" %}
+    </div>
+
+    <div id="panel_mail-guide" class="admin_panel mdui-container">
+        {% include "mail-guide.html" %}
+    </div>
+
+    <div id="panel_users" class="admin_panel mdui-container">
+        {% include "users.html" %}
+    </div>
+
+    <div id="panel_aliases" class="admin_panel mdui-container">
+        {% include "aliases.html" %}
+    </div>
+
+    <div id="panel_sync_guide" class="admin_panel mdui-container">
+        {% include "sync-guide.html" %}
+    </div>
+
+    <div id="panel_web" class="admin_panel mdui-container">
+        {% include "web.html" %}
+    </div>
+
+    <div id="panel_tls" class="admin_panel mdui-container mdui-typo">
+        {% include "ssl.html" %}
+    </div>
+</div>
+
+<div id="ajax_loading_indicator"
+     style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; text-align: center; background-color: rgba(255,255,255,.75)">
+    <div style="margin: 20% auto">
+        <div class="mdui-container mdui-p-t-5">
+            <div class="mdui-spinner mdui-spinner-colorful"></div>
+            <!--            <div class="mdui-progress">-->
+            <!--                <div class="mdui-progress-indeterminate"></div>-->
+            <!--            </div>-->
+        </div>
+        <div>Loading...</div>
+    </div>
+</div>
+
+<!--Dialog-->
+<div class="mdui-dialog" id="dialog">
+    <div class="mdui-dialog-title"></div>
+    <div class="mdui-dialog-content"></div>
+    <div class="mdui-dialog-actions">
+        <button type="button" class="mdui-btn mdui-ripple btn-default" mdui-dialog-cancel>Ok</button>
+        <button type="button" class="mdui-btn mdui-ripple btn-danger" mdui-dialog-confirm>Yes</button>
+    </div>
+</div>
+
+
+<script src="/admin/assets/jquery.min.js"></script>
+<script src="/admin/assets/mdui/js/mdui.min.js"></script>
+<!--<script src="/admin/assets/bootstrap/js/bootstrap.min.js"></script>-->
+
+<script>
+    var global_modal_state = null;
+    var global_modal_funcs = null;
+    var dialog = new mdui.Dialog('#dialog');
+    var drawer = new mdui.Drawer('#drawer');
+
+    $(function () {
+        $('#dialog').on('shown.bs.modal', function (e) {
+            // set focus to first input in the global modal's body
+            var input = $('#dialog .mdui-dialog-content input');
+            if (input.length > 0) $(input[0]).focus();
+        })
+        $('#dialog .btn-danger').click(function () {
+            // Don't take action now. Wait for the modal to be totally hidden
+            // so that we don't attempt to show another modal while this one
+            // is closing.
+            global_modal_state = 0; // OK
+        })
+        $('#dialog .btn-default').click(function () {
+            global_modal_state = 1; // Cancel
+        })
+
+        $('#dialog').on('closed.mdui.dialog', function (e) {
+            // do the cancel function
+            if (global_modal_state == null) global_modal_state = 1; // cancel if the user hit ESC or clicked outside of the modal
+            if (global_modal_funcs && global_modal_funcs[global_modal_state])
+                global_modal_funcs[global_modal_state]();
+        })
+    })
+
+    function show_modal_error(title, message, callback) {
+        $('#dialog .mdui-dialog-title').text(title);
+        $('#dialog .modal-body').html("<p/>");
+        if (typeof question == 'string') {
+            $('#dialog .mdui-dialog-content').text(message);
+            // $('#global_modal .modal-dialog').addClass("modal-sm");
+        } else {
+            $('#dialog .mdui-dialog-content').html("").append(message);
+            // $('#global_modal .modal-dialog').removeClass("modal-sm");
+        }
+        $('#dialog .btn-default').show().text("OK");
+        $('#dialog .btn-danger').hide();
+        global_modal_funcs = [callback, callback];
+        global_modal_state = null;
+        dialog.handleUpdate();
+        dialog.open();
+        return false; // handy when called from onclick
+    }
+
+    function show_modal_confirm(title, question, verb, yes_callback, cancel_callback) {
+        $('#dialog .mdui-dialog-title').text(title);
+        if (typeof question == 'string') {
+            // $('#global_modal .modal-dialog').addClass("modal-sm");
+            $('#dialog .mdui-dialog-content').text(question);
+        } else {
+            // $('#global_modal .modal-dialog').removeClass("modal-sm");
+            $('#dialog .mdui-dialog-content').html("").append(question);
+        }
+        if (typeof verb == 'string') {
+            $('#dialog .btn-default').show().text("Cancel");
+            $('#dialog .btn-danger').show().text(verb);
+        } else {
+            $('#dialog .btn-default').show().text(verb[1]);
+            $('#dialog .btn-danger').show().text(verb[0]);
+        }
+        global_modal_funcs = [yes_callback, cancel_callback];
+        global_modal_state = null;
+        dialog.handleUpdate();
+        dialog.open();
+        return false; // handy when called from onclick
+    }
+
+    var ajax_num_executing_requests = 0;
+
+    function ajax_with_indicator(options) {
+        setTimeout("if (ajax_num_executing_requests > 0) $('#ajax_loading_indicator').fadeIn()", 100);
+
+        function hide_loading_indicator() {
+            ajax_num_executing_requests--;
+            if (ajax_num_executing_requests == 0)
+                $('#ajax_loading_indicator').stop(true).hide(); // stop() prevents an ongoing fade from causing the thing to be shown again after this call
+        }
+
+        var old_success = options.success;
+        var old_error = options.error;
+        options.success = function (data) {
+            hide_loading_indicator();
+            if (data.status == "error")
+                show_modal_error("Error", data.message);
+            else if (old_success)
+                old_success(data);
+        };
+        options.error = function (jqxhr) {
+            hide_loading_indicator();
+            if (!old_error)
+                show_modal_error("Error", "Something went wrong, sorry.")
+            else
+                old_error(jqxhr.responseText, jqxhr);
+        };
+        ajax_num_executing_requests++;
+        $.ajax(options);
+        return false; // handy when called from onclick
+    }
+
+    var api_credentials = ["", ""];
+
+    function api(url, method, data, callback, callback_error, headers) {
+        // from http://www.webtoolkit.info/javascript-base64.html
+        function base64encode(input) {
+            _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+            var output = "";
+            var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+            var i = 0;
+            while (i < input.length) {
+                chr1 = input.charCodeAt(i++);
+                chr2 = input.charCodeAt(i++);
+                chr3 = input.charCodeAt(i++);
+                enc1 = chr1 >> 2;
+                enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                enc4 = chr3 & 63;
+                if (isNaN(chr2)) {
+                    enc3 = enc4 = 64;
+                } else if (isNaN(chr3)) {
+                    enc4 = 64;
+                }
+                output = output +
+                    _keyStr.charAt(enc1) + _keyStr.charAt(enc2) +
+                    _keyStr.charAt(enc3) + _keyStr.charAt(enc4);
+            }
+
+            return output;
+        }
+
+        function default_error(text, xhr) {
+            if (xhr.status != 403) // else handled below
+                show_modal_error("Error", "Something went wrong, sorry.")
+        }
+
+        ajax_with_indicator({
+            url: "/admin" + url,
+            method: method,
+            cache: false,
+            data: data,
+            headers: headers,
+            // the custom DNS api sends raw POST/PUT bodies --- prevent URL-encoding
+            processData: typeof data != "string",
+            mimeType: typeof data == "string" ? "text/plain; charset=ascii" : null,
+
+            beforeSend: function (xhr) {
+                // We don't store user credentials in a cookie to avoid the hassle of CSRF
+                // attacks. The Authorization header only gets set in our AJAX calls triggered
+                // by user actions.
+                xhr.setRequestHeader(
+                    'Authorization',
+                    'Basic ' + base64encode(api_credentials[0] + ':' + api_credentials[1]));
+            },
+            success: callback,
+            error: callback_error || default_error,
+            statusCode: {
+                403: function (xhr) {
+                    // Credentials are no longer valid. Try to login again.
+                    var p = current_panel;
+                    show_panel('login');
+                    switch_back_to_panel = p;
+                }
+            }
+        })
+    }
+
+    var current_panel = null;
+    var switch_back_to_panel = null;
+
+    function do_logout() {
+        $("#drawer a.mdui-list-item").removeClass("mdui-list-item-active")
+        api_credentials = ["", ""];
+        if (typeof localStorage != 'undefined')
+            localStorage.removeItem("miab-cp-credentials");
+        if (typeof sessionStorage != 'undefined')
+            sessionStorage.removeItem("miab-cp-credentials");
+        show_panel('login');
+    }
+
+    function show_panel(panelid) {
+        $('.mdui-drawer a').removeClass("mdui-list-item-active")
+        drawer.close();
+        if (panelid.getAttribute) {
+            // we might be passed an HTMLElement <a>.
+            panelid.className += " mdui-list-item-active";
+            panelid = panelid.getAttribute('href').substring(1);
+        }
+        switch (panelid) {
+            case "custom_dns":
+                $('.mdui-typo-headline').text("Custom DNS")
+                $("#drawer a.mdui-list-item")[3].className += " mdui-list-item-active"
+                break
+            case "mail-guide":
+                $('.mdui-typo-headline').text("Checking and Sending Mail")
+                $("#drawer a.mdui-list-item")[6].className += " mdui-list-item-active"
+                break
+            case "users":
+                $('.mdui-typo-headline').text("Users")
+                $("#drawer a.mdui-list-item")[7].className += " mdui-list-item-active"
+                break
+            case "sync_guide":
+                $('.mdui-typo-headline').text("Contacts & Calendar Synchronization")
+                $("#drawer a.mdui-list-item")[10].className += " mdui-list-item-active"
+                break
+
+        }
+
+        $('.admin_panel').hide();
+        $('#panel_' + panelid).show();
+        if (typeof localStorage != 'undefined')
+            localStorage.setItem("miab-cp-lastpanel", panelid);
+        if (window["show_" + panelid])
+            window["show_" + panelid]();
+
+        current_panel = panelid;
+        switch_back_to_panel = null;
+
+        return false; // when called from onclick, cancel navigation
+    }
+
+    $(function () {
+        // Recall saved user credentials.
+        if (typeof sessionStorage != 'undefined' && sessionStorage.getItem("miab-cp-credentials"))
+            api_credentials = sessionStorage.getItem("miab-cp-credentials").split(":");
+        else if (typeof localStorage != 'undefined' && localStorage.getItem("miab-cp-credentials"))
+            api_credentials = localStorage.getItem("miab-cp-credentials").split(":");
+
+        // Recall what the user was last looking at.
+        if (typeof localStorage != 'undefined' && localStorage.getItem("miab-cp-lastpanel")) {
+            show_panel(localStorage.getItem("miab-cp-lastpanel"));
+        } else {
+            show_panel('login');
+        }
+    })
+
+</script>
+</body>
+</html>
