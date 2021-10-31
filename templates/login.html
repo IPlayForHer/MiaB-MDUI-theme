@@ -200,6 +200,7 @@ sudo management/cli.py user make-admin me@{{ hostname }}</pre>
                 $('.if-logged-in-' + priv).toggle(true);
                 $('.if-logged-in-not-' + priv).toggle(false);
             });
+            drawer.swipeSupport=true;
         }
         $('.if-not-logged-in').toggle(!is_logged_in);
     }

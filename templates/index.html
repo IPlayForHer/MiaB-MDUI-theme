@@ -88,7 +88,7 @@
 <!--NavBar-->
 <header class="mdui-appbar mdui-appbar-fixed">
     <div class="mdui-toolbar mdui-color-theme">
-        <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white if-logged-in-admin"
+        <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white if-logged-in"
               mdui-drawer="{target: '#drawer', swipe: true}"><i class="mdui-icon material-icons">&#xe5d2;</i></span>
         <p class="mdui-typo-headline">{{ hostname }}</p>
         <div class="mdui-toolbar-spacer"></div>
@@ -133,8 +133,10 @@
             </div>
         </div>
 
-        <a href="#mail-guide" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">
-            <i class="mdui-icon material-icons">&#xe0be;</i>
+        <!-- Mail Guide For User -->
+        <a href="#mail-guide" class="mdui-list-item mdui-ripple if-logged-in-not-admin"
+           onclick="return show_panel(this);">
+            <i class="mdui-list-item-icon mdui-icon material-icons">&#xe0be;</i>
             <div class="mdui-list-item-content mdui-m-r-4">Mail</div>
         </a>
 
@@ -439,7 +441,6 @@
         // Forget the token.
         api_credentials = null;
         $("#drawer a.mdui-list-item").removeClass("mdui-list-item-active")
-        api_credentials = ["", ""];
         if (typeof localStorage != 'undefined')
             localStorage.removeItem("miab-cp-credentials");
         if (typeof sessionStorage != 'undefined')
@@ -451,6 +452,8 @@
 
         // Reset menus.
         show_hide_menus();
+        drawer.close();
+        drawer.swipeSupport=false;
     }
 
     function show_panel(panelid) {
@@ -473,14 +476,15 @@
             case "mail-guide":
                 $('.mdui-typo-headline').text("Checking and Sending Mail")
                 $("#drawer a.mdui-list-item")[6].className += " mdui-list-item-active"
+                $("#drawer a.mdui-list-item")[7].className += " mdui-list-item-active"
                 break
             case "users":
                 $('.mdui-typo-headline').text("Users")
-                $("#drawer a.mdui-list-item")[7].className += " mdui-list-item-active"
+                $("#drawer a.mdui-list-item")[8].className += " mdui-list-item-active"
                 break
             case "sync_guide":
                 $('.mdui-typo-headline').text("Contacts & Calendar Synchronization")
-                $("#drawer a.mdui-list-item")[10].className += " mdui-list-item-active"
+                $("#drawer a.mdui-list-item")[11].className += " mdui-list-item-active"
                 break
 
         }
