@@ -217,7 +217,7 @@
                         var n = $("#alias-template").clone();
                         n.attr('id', '');
 
-                        if (alias.required) n.addClass('alias-required');
+                        if (alias.auto) n.addClass('alias-auto');
                         n.attr('data-address', alias.address_display); // this is decoded from IDNA, but will get re-coded to IDNA on the backend
                         n.find('td.address').text(alias.address_display)
                         for (var j = 0; j < alias.forwards_to.length; j++)

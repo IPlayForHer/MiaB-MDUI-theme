@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{{hostname}} - Mail-in-a-Box Control Panel</title>
+    <title>{{ hostname }} - Mail-in-a-Box Control Panel</title>
 
     <meta name="robots" content="noindex, nofollow">
     <!--Mobile Web App-->
@@ -88,11 +88,11 @@
 <!--NavBar-->
 <header class="mdui-appbar mdui-appbar-fixed">
     <div class="mdui-toolbar mdui-color-theme">
-        <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white"
+        <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white if-logged-in-admin"
               mdui-drawer="{target: '#drawer', swipe: true}"><i class="mdui-icon material-icons">&#xe5d2;</i></span>
-        <p class="mdui-typo-headline">{{hostname}}</p>
+        <p class="mdui-typo-headline">{{ hostname }}</p>
         <div class="mdui-toolbar-spacer"></div>
-        <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" id="dark_toggle_btn"
+        <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white if-logged-in" id="dark_toggle_btn"
               mdui-tooltip="{content: 'Log out'}" onclick="do_logout(); return false;"><i
                 class="mdui-icon material-icons">&#xe879;</i></span>
     </div>
@@ -104,13 +104,13 @@
             <img src="/admin/assets/neonmail.png">
             <div class="mdui-card-media-covered mdui-card-media-covered-gradient">
                 <div class="mdui-card-primary">
-                    <div class="mdui-card-primary-title">{{hostname}}</div>
+                    <div class="mdui-card-primary-title">{{ hostname }}</div>
                 </div>
             </div>
         </div>
     </div>
     <div class="mdui-list" mdui-collapse="{accordion: true}">
-        <div class="mdui-collapse-item">
+        <div class="mdui-collapse-item if-logged-in-admin">
             <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
                 <i class="mdui-list-item-icon mdui-icon material-icons">&#xe8b8;</i>
                 <div class="mdui-list-item-content">System</div>
@@ -128,11 +128,17 @@
                     DNS</a>
                 <a href="#external_dns" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">External
                     DNS</a>
-                <a href="/admin/munin" class="mdui-list-item mdui-ripple" target="_blank">Munin Monitoring</a>
+                <a href="#munin" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">Munin
+                    Monitoring</a>
             </div>
         </div>
 
-        <div class="mdui-collapse-item">
+        <a href="#mail-guide" class="mdui-list-item mdui-ripple" onclick="return show_panel(this);">
+            <i class="mdui-icon material-icons">&#xe0be;</i>
+            <div class="mdui-list-item-content mdui-m-r-4">Mail</div>
+        </a>
+
+        <div class="mdui-collapse-item if-logged-in-admin">
             <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
                 <i class="mdui-list-item-icon mdui-icon material-icons">&#xe853;</i>
                 <div class="mdui-list-item-content">Mail & Users</div>
@@ -148,14 +154,16 @@
                     Auth</a>
             </div>
         </div>
-        <a href="#sync_guide" onclick="return show_panel(this);" class="mdui-list-item mdui-ripple">
+        <a href="#sync_guide" onclick="return show_panel(this);" class="mdui-list-item mdui-ripple if-logged-in">
             <i class="mdui-list-item-icon mdui-icon material-icons">&#xe627;</i>
             <div class="mdui-list-item-content mdui-m-r-4">Contacts/Calendar</div>
         </a>
-        <a href="#web" onclick="return show_panel(this);" class="mdui-list-item mdui-ripple">
+        <a href="#web" onclick="return show_panel(this);" class="mdui-list-item mdui-ripple if-logged-in-admin">
             <i class="mdui-list-item-icon mdui-icon material-icons">&#xe051;</i>
             <div class="mdui-list-item-content mdui-m-r-4">Web</div>
         </a>
+
+        <!-- footer -->
         <div class="mdui-typo mdui-typo-caption-opacity" style="position: absolute; bottom: 0;">
             Powered by <a href="https://mailinabox.email/" target="_blank">MiaB</a>
             <br>
@@ -168,6 +176,9 @@
 
 <!-- /container -->
 <div class="container">
+    <div id="panel_welcome" class="admin_panel mdui-container">
+        {% include "welcome.html" %}
+    </div>
     <div id="panel_system_status" class="admin_panel mdui-container">
         {% include "system-status.html" %}
     </div>
@@ -214,6 +225,9 @@
 
     <div id="panel_tls" class="admin_panel mdui-container mdui-typo">
         {% include "ssl.html" %}
+    </div>
+    <div id="panel_munin" class="admin_panel mdui-container">
+        {% include "munin.html" %}
     </div>
 </div>
 
@@ -349,7 +363,7 @@
         return false; // handy when called from onclick
     }
 
-    var api_credentials = ["", ""];
+    var api_credentials = null;
 
     function api(url, method, data, callback, callback_error, headers) {
         // from http://www.webtoolkit.info/javascript-base64.html
@@ -400,7 +414,7 @@
                 // by user actions.
                 xhr.setRequestHeader(
                     'Authorization',
-                    'Basic ' + base64encode(api_credentials[0] + ':' + api_credentials[1]));
+                    'Basic ' + base64encode(api_credentials.username + ':' + api_credentials.session_key));
             },
             success: callback,
             error: callback_error || default_error,
@@ -419,6 +433,11 @@
     var switch_back_to_panel = null;
 
     function do_logout() {
+        // Clear the session from the backend.
+        api("/logout", "POST");
+
+        // Forget the token.
+        api_credentials = null;
         $("#drawer a.mdui-list-item").removeClass("mdui-list-item-active")
         api_credentials = ["", ""];
         if (typeof localStorage != 'undefined')
@@ -426,6 +445,12 @@
         if (typeof sessionStorage != 'undefined')
             sessionStorage.removeItem("miab-cp-credentials");
         show_panel('login');
+
+        // Return to the start.
+        show_panel('login');
+
+        // Reset menus.
+        show_hide_menus();
     }
 
     function show_panel(panelid) {
@@ -440,6 +465,10 @@
             case "custom_dns":
                 $('.mdui-typo-headline').text("Custom DNS")
                 $("#drawer a.mdui-list-item")[3].className += " mdui-list-item-active"
+                break
+            case "munin":
+                $('.mdui-typo-headline').text("Munin Monitoring")
+                $("#drawer a.mdui-list-item")[5].className += " mdui-list-item-active"
                 break
             case "mail-guide":
                 $('.mdui-typo-headline').text("Checking and Sending Mail")
@@ -471,14 +500,22 @@
 
     $(function () {
         // Recall saved user credentials.
-        if (typeof sessionStorage != 'undefined' && sessionStorage.getItem("miab-cp-credentials"))
-            api_credentials = sessionStorage.getItem("miab-cp-credentials").split(":");
-        else if (typeof localStorage != 'undefined' && localStorage.getItem("miab-cp-credentials"))
-            api_credentials = localStorage.getItem("miab-cp-credentials").split(":");
+        try {
+            if (typeof sessionStorage != 'undefined' && sessionStorage.getItem("miab-cp-credentials"))
+                api_credentials = JSON.parse(sessionStorage.getItem("miab-cp-credentials"));
+            else if (typeof localStorage != 'undefined' && localStorage.getItem("miab-cp-credentials"))
+                api_credentials = JSON.parse(localStorage.getItem("miab-cp-credentials"));
+        } catch (_) {
+        }
+
+        // Toggle menu state.
+        show_hide_menus();
 
         // Recall what the user was last looking at.
-        if (typeof localStorage != 'undefined' && localStorage.getItem("miab-cp-lastpanel")) {
+        if (api_credentials != null && typeof localStorage != 'undefined' && localStorage.getItem("miab-cp-lastpanel")) {
             show_panel(localStorage.getItem("miab-cp-lastpanel"));
+        } else if (api_credentials != null) {
+            show_panel('welcome');
         } else {
             show_panel('login');
         }
