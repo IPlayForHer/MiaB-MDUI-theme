@@ -8,5 +8,5 @@ Replace `mfa.py` to `~/home/ubuntu/mailinabox/management/mfa.py` to enable one c
 
 ## Upgrade from v0.54?
 
-Before you upgrade v55 you may need to `git reset --hard` in mailinabox folder, then you can upgrade your MiaB
-and after your installation finished you can install theme by follow-up Install step
+Before you upgrade v55 you may need to `git reset --hard` in mailinabox folder, then you can upgrade your MiaB,
+after your installation finished you can install theme by follow-up Install step
